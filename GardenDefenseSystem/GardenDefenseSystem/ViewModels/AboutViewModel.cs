@@ -76,6 +76,8 @@ namespace GardenDefenseSystem.ViewModels
             VisionApiCallCount = VisionApiCallCount.Instance;
             StopPlayerCommand = new Command(() => StopPlayer());
 
+            ObjectDetector = DependencyService.Get<IObjectDetector>();
+
             RemainingHoursOfApiusage =
                 $"Remaining hrs for this month: {VisionApiCallCount.GetRemainingApiRuntimeHrs()}";
             //PredictionApi = AuthenticatePrediction();
@@ -114,6 +116,7 @@ namespace GardenDefenseSystem.ViewModels
         public ICommand TakePhotoCommand { get; }
         public CustomVisionPredictionClient PredictionApi { get; }
         public ICommand StopPlayerCommand { get; }
+        public IObjectDetector ObjectDetector { get; private set; }
 
         public async Task StartObservation()
         {
@@ -136,7 +139,7 @@ namespace GardenDefenseSystem.ViewModels
 
             using (var photoStream = await ResizeImageAndroidAsync(photoFile))
             {
-                ImagePrediction result = null;
+                ImagePrediction result = ObjectDetector.Detect(photoStream.ToArray());
 
                 PredictionResult = "uploading photo...";
                 try
@@ -354,16 +357,7 @@ namespace GardenDefenseSystem.ViewModels
             return predictionApi;
         }
 
-        public async Task UploadPhoto(Stream photoStream)
-        {
-            HttpClient client = new HttpClient() { BaseAddress = new Uri("https://website.com") };
-
-            StreamContent content = new StreamContent(photoStream);
-
-            content.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
-
-            var response = await client.PostAsync("//image", content);
-        }
+      
 
         public async Task<FileResult> TakePhoto()
         {
