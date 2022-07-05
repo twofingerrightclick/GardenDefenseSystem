@@ -24,6 +24,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\DetectionPage.xaml.cs">
+      <DependentUpon>DetectionPage.xaml</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="GettingStarted.txt">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>

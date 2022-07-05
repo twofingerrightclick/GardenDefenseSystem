@@ -23,13 +23,40 @@ namespace GardenDefenseSystem.Droid
         //PixelSize is a constant with the value of 3 because a pixel has three color channels: Red Green and Blue
         const int PixelSize = 3;
 
+        // _OutputBoxes: array of shape [Batchsize, NUM_DETECTIONS,4]
+        // contains the location of detected boxes
+        private float[][] _OutputBoxes;
+        public Java.Lang.Object OutputBoxes
+        {
+            get => Java.Lang.Object.FromArray(_OutputBoxes);
+            set => _OutputBoxes = value.ToArray<float[]>();
+        }
+
+        // _OutputClasses: array of shape [Batchsize, NUM_DETECTIONS]
+        // contains the classes of detected boxes
+        private float[] _OutputClasses;
+        public Java.Lang.Object OutputClasses
+        {
+            get => Java.Lang.Object.FromArray(_OutputClasses);
+            set => _OutputClasses = value.ToArray<float>();
+        }
+
+        // _OutputScores: array of shape [Batchsize, NUM_DETECTIONS]
+        // contains the scores of detected boxes
+        private float[] _OutputScores;
+        public Java.Lang.Object OutputScores
+        {
+            get => Java.Lang.Object.FromArray(_OutputScores);
+            set => _OutputScores = value.ToArray<float>();
+        }
+
+        public Interpreter Interpreter { get; }
+
         public TensorflowObjectDetector()
         {
             var mappedByteBuffer = GetModelAsMappedByteBuffer();
             Interpreter = new Interpreter(mappedByteBuffer);
         }
-
-        public Interpreter Interpreter { get; }
 
         public ImagePrediction Detect(byte[] image)
         {
@@ -40,7 +67,7 @@ namespace GardenDefenseSystem.Droid
             var width = shape[1];
             var height = shape[2];
 
-            var byteBuffer = GetPhotoAsByteBuffer(image, width, height);
+            var imageByteBuffer = GetPhotoAsByteBuffer(image, width, height);
 
             //use StreamReader to import the labels from labels.txt
             using var streamReader = new StreamReader(
@@ -57,80 +84,39 @@ namespace GardenDefenseSystem.Droid
 
             //var output = new FloatBuffer[Interpreter.OutputTensorCount];
 
-
+            // see this example of output https://github.com/tensorflow/examples/blob/75f4d66acd84b67fbee073186c9e031db5513e34/lite/examples/object_detection/android/app/src/main/java/org/tensorflow/lite/examples/detection/tflite/TFLiteObjectDetectionAPIModel.java#L178-L194
             int detectedBoxesOutputIndex = Interpreter.GetOutputIndex("detected_boxes"); // 0
             int detectedClassesOutputIndex = Interpreter.GetOutputIndex("detected_classes"); // 1
             int detectedScoresOutputIndex = Interpreter.GetOutputIndex("detected_scores"); // 2
-            /*
-                        for (int i = 0; i < output.Length; i++)
-                        {
-                            output[i] = FloatBuffer.Allocate(10000);
-                        }*/
+
+            int numDetections = Interpreter
+                .GetOutputTensor(detectedClassesOutputIndex)
+                .NumElements();
 
             var outputDict = new Dictionary<Java.Lang.Integer, Java.Lang.Object>();
 
-            int firstDimensionOfOutputTensorArray = Interpreter.
-                GetOutputTensor(Interpreter.GetOutputIndex("detected_boxes"))
-                .NumElements() / 4;
-            var boundingBoxes = new float[firstDimensionOfOutputTensorArray][];
-            for (int i = 0; i < boundingBoxes.Length; i++)
-            {
-                boundingBoxes[i] = new float[4];
-            }
-            var boundingBoxesOutput = Java.Lang.Object.FromArray(boundingBoxes);
+            // new float [][]
+            _OutputBoxes = CreateJaggedArray(numDetections, 4);
+            _OutputClasses = new float[numDetections];
+            _OutputScores = new float[numDetections];
 
-            outputDict.Add(new Java.Lang.Integer(detectedBoxesOutputIndex), boundingBoxesOutput);
+            var mOutputBoxes = OutputBoxes;
+            var mOutputClasses = OutputClasses;
+            var mOutputScores = OutputScores;
 
-            var detectedClasses = new int[64];
-            var detectedClassesOutput = (Java.Lang.Object)  IntBuffer.Allocate(1000);
+            Java.Lang.Object[] inputArray = { imageByteBuffer };
 
-            outputDict.Add(new Java.Lang.Integer(detectedClassesOutputIndex), detectedClassesOutput);
+            var outputMap = new Dictionary<Java.Lang.Integer, Java.Lang.Object>();
+            outputMap.Add(new Java.Lang.Integer(detectedBoxesOutputIndex), mOutputBoxes);
+            outputMap.Add(new Java.Lang.Integer(detectedClassesOutputIndex), mOutputClasses);
+            outputMap.Add(new Java.Lang.Integer(detectedScoresOutputIndex), mOutputScores);
 
+            //stuck here
+            Interpreter.RunForMultipleInputsOutputs(inputArray, outputMap);
 
-            var scores = new float[64];
-            var scoresOutput = (Java.Lang.Object)FloatBuffer.Allocate(1000);
-
-            outputDict.Add(new Java.Lang.Integer(detectedScoresOutputIndex), scoresOutput);
-
-            var input = new ByteBuffer[1] { byteBuffer };
-            var inputs = (Java.Lang.Object[])(input);
-
-
-            Interpreter.RunForMultipleInputsOutputs(inputs, outputDict);
-
-            
-
-
-            /*  for (int i = 0; i < Interpreter.OutputTensorCount; i++)
-              {
-                  outputLocations[i] = new float[Interpreter.GetOutputTensor(i).NumElements()];
-              }*/
-
-
-
-            // using FloatBuffer outputs = FloatBuffer.Allocate(Interpreter.GetOutputTensor(1).NumElements());
-
-            //using FloatBuffer outputs = FloatBuffer.Allocate(10000);
-
-            //var outputs = Java.Lang.Object<float[,,]>(outputLocations);
-
-
-
-/*            output[0].Position(0);
-            //outputs.ToArray<>
-
-            StringBuilder stringBuilder = new StringBuilder();
-            int count = 0;
-            while (output[0].HasRemaining)
-            {
-                count++;
-                stringBuilder.Append(output[0].Get() + ", ");
-
-            }
-             var x = stringBuilder.ToString();
-
-            var classificationResult = outputs.ToArray<float>();*/
-            var classificationResult = boundingBoxesOutput.ToArray<float[]>();
+            OutputBoxes = mOutputBoxes;
+            OutputClasses = mOutputClasses;
+            OutputScores = mOutputScores;
 
             //Map the classificationResult to the labels and sort the result to find which label has the highest probability
 
@@ -162,15 +148,7 @@ namespace GardenDefenseSystem.Droid
             return mappedByteBuffer;
         }
 
-        /*private Java.IO.File GetModelFile()
-        {
-            var assetDescriptor = Application.Context.Assets.OpenFd("model.tflite");
-            FileDescriptor descriptor = assetDescriptor.FileDescriptor;
-
-            Java.IO.File file = new Java.IO.File(assetDescriptor);
-
-            return Java.IO.File.
-        }*/
+        
 
         //Resize the image for the TensorFlow interpreter
         private ByteBuffer GetPhotoAsByteBuffer(byte[] image, int width, int height)
@@ -211,6 +189,29 @@ namespace GardenDefenseSystem.Droid
             bitmap.Recycle();
 
             return byteBuffer;
+        }
+
+        private static float[][][] CreateJaggedArray(int lay1, int lay2, int lay3)
+        {
+            var arr = new float[lay1][][];
+
+            for (int i = 0; i < lay1; i++)
+            {
+                arr[i] = CreateJaggedArray(lay2, lay3);
+            }
+            return null;
+        }
+
+        private static float[][] CreateJaggedArray(int lay1, int lay2)
+        {
+            var arr = new float[lay1][];
+
+            for (int i = 0; i < lay1; i++)
+            {
+                arr[i] = new float[lay2];
+            }
+
+            return arr;
         }
     }
 }

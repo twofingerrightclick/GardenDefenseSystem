@@ -1,13 +1,13 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <ContentPage
-    x:Class="GardenDefenseSystem.Views.AboutPage"
+    x:Class="GardenDefenseSystem.Views.DetectionPage"
     xmlns="http://xamarin.com/schemas/2014/forms"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:vm="clr-namespace:GardenDefenseSystem.ViewModels"
     Title="{Binding Title}">
 
     <ContentPage.BindingContext>
-        <vm:AboutViewModel />
+        <vm:DetectionViewModel />
     </ContentPage.BindingContext>
 
     <ContentPage.Resources>
@@ -31,8 +31,9 @@
 
                 <Button
                     Margin="0,10,0,0"
-                    BackgroundColor="{StaticResource Primary}"
+                    BackgroundColor="#17e9e1"
                     Command="{Binding TakePhotoCommand}"
+                    CornerRadius="40"
                     Text="Take Photo"
                     TextColor="#242424" />
                 <Button

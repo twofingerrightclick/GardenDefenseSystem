@@ -6,12 +6,12 @@ using Xamarin.Forms.Xaml;
 
 namespace GardenDefenseSystem.Views
 {
-    public partial class AboutPage : ContentPage
+    public partial class DetectionPage : ContentPage
     {
 
-        AboutViewModel ViewModel = new AboutViewModel();
+        DetectionViewModel ViewModel = new DetectionViewModel();
 
-        public AboutPage()
+        public DetectionPage()
         {
             
             InitializeComponent();

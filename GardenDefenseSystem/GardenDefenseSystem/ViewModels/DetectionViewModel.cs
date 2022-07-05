@@ -19,7 +19,7 @@ using Xamarin.Forms;
 
 namespace GardenDefenseSystem.ViewModels
 {
-    public class AboutViewModel : BaseViewModel
+    public class DetectionViewModel : BaseViewModel
     {
         public const string VisionApiBaseAddress =
             "https://customvisiongardendefensesystem-prediction.cognitiveservices.azure.com";
@@ -69,7 +69,7 @@ namespace GardenDefenseSystem.ViewModels
             set { SetProperty(ref _TestModeSwitchToggleStatus, value); }
         }
 
-        public AboutViewModel()
+        public DetectionViewModel()
         {
             Title = "Garden Defense System";
             TakePhotoCommand = new Command(async () => await StartObservation());
