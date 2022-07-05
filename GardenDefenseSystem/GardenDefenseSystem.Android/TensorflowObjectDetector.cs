@@ -4,6 +4,7 @@ using Java.IO;
 using Java.Nio;
 using Java.Nio.Channels;
 using Microsoft.Azure.CognitiveServices.Vision.CustomVision.Prediction.Models;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -54,21 +55,50 @@ namespace GardenDefenseSystem.Droid
                 .Where(s => !string.IsNullOrEmpty(s))
                 .ToList();
 
-            var outputTensors = new Tensor[Interpreter.OutputTensorCount];
+            //var output = new FloatBuffer[Interpreter.OutputTensorCount];
+
 
             int detectedBoxesOutputIndex = Interpreter.GetOutputIndex("detected_boxes"); // 0
             int detectedClassesOutputIndex = Interpreter.GetOutputIndex("detected_classes"); // 1
             int detectedScoresOutputIndex = Interpreter.GetOutputIndex("detected_scores"); // 2
+            /*
+                        for (int i = 0; i < output.Length; i++)
+                        {
+                            output[i] = FloatBuffer.Allocate(10000);
+                        }*/
 
-            for (int i = 0; i < outputTensors.Length; i++)
+            var outputDict = new Dictionary<Java.Lang.Integer, Java.Lang.Object>();
+
+            int firstDimensionOfOutputTensorArray = Interpreter.
+                GetOutputTensor(Interpreter.GetOutputIndex("detected_boxes"))
+                .NumElements() / 4;
+            var boundingBoxes = new float[firstDimensionOfOutputTensorArray][];
+            for (int i = 0; i < boundingBoxes.Length; i++)
             {
-                outputTensors[i] = Interpreter.GetOutputTensor(i);
+                boundingBoxes[i] = new float[4];
             }
+            var boundingBoxesOutput = Java.Lang.Object.FromArray(boundingBoxes);
 
-            //Convert our two-dimensional array into a Java.Lang.Object, the required input for Xamarin.TensorFlow.List.Interpreter
-            var outputs = (Java.Lang.Object)(outputTensors);
+            outputDict.Add(new Java.Lang.Integer(detectedBoxesOutputIndex), boundingBoxesOutput);
 
-            Interpreter.Run(byteBuffer, outputs);
+            var detectedClasses = new int[64];
+            var detectedClassesOutput = (Java.Lang.Object)  IntBuffer.Allocate(1000);
+
+            outputDict.Add(new Java.Lang.Integer(detectedClassesOutputIndex), detectedClassesOutput);
+
+
+            var scores = new float[64];
+            var scoresOutput = (Java.Lang.Object)FloatBuffer.Allocate(1000);
+
+            outputDict.Add(new Java.Lang.Integer(detectedScoresOutputIndex), scoresOutput);
+
+            var input = new ByteBuffer[1] { byteBuffer };
+            var inputs = (Java.Lang.Object[])(input);
+
+
+            Interpreter.RunForMultipleInputsOutputs(inputs, outputDict);
+
+            
 
 
             /*  for (int i = 0; i < Interpreter.OutputTensorCount; i++)
@@ -86,19 +116,21 @@ namespace GardenDefenseSystem.Droid
 
 
 
-            //outputs.Position(0);
+/*            output[0].Position(0);
             //outputs.ToArray<>
 
-            /*  StringBuilder stringBuilder = new StringBuilder();
-              int count = 0;
-              while (outputs.HasRemaining) {
-                  count++;
-                  stringBuilder.Append(outputs.Get()+", ");
+            StringBuilder stringBuilder = new StringBuilder();
+            int count = 0;
+            while (output[0].HasRemaining)
+            {
+                count++;
+                stringBuilder.Append(output[0].Get() + ", ");
 
-          }*/
-            // var x = stringBuilder.ToString();
+            }
+             var x = stringBuilder.ToString();
 
-            var classificationResult = outputs.ToArray<float>();
+            var classificationResult = outputs.ToArray<float>();*/
+            var classificationResult = boundingBoxesOutput.ToArray<float[]>();
 
             //Map the classificationResult to the labels and sort the result to find which label has the highest probability
 
