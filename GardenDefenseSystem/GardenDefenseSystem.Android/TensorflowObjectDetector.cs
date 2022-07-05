@@ -25,29 +25,29 @@ namespace GardenDefenseSystem.Droid
 
         // _OutputBoxes: array of shape [Batchsize, NUM_DETECTIONS,4]
         // contains the location of detected boxes
-        private float[][] _OutputBoxes;
+        private float[][][] _OutputBoxes;
         public Java.Lang.Object OutputBoxes
         {
             get => Java.Lang.Object.FromArray(_OutputBoxes);
-            set => _OutputBoxes = value.ToArray<float[]>();
+            set => _OutputBoxes = value.ToArray<float[][]>();
         }
 
         // _OutputClasses: array of shape [Batchsize, NUM_DETECTIONS]
         // contains the classes of detected boxes
-        private float[] _OutputClasses;
+        private float[][] _OutputClasses;
         public Java.Lang.Object OutputClasses
         {
             get => Java.Lang.Object.FromArray(_OutputClasses);
-            set => _OutputClasses = value.ToArray<float>();
+            set => _OutputClasses = value.ToArray<float[]>();
         }
 
         // _OutputScores: array of shape [Batchsize, NUM_DETECTIONS]
         // contains the scores of detected boxes
-        private float[] _OutputScores;
+        private float[][] _OutputScores;
         public Java.Lang.Object OutputScores
         {
             get => Java.Lang.Object.FromArray(_OutputScores);
-            set => _OutputScores = value.ToArray<float>();
+            set => _OutputScores = value.ToArray<float[]>();
         }
 
         public Interpreter Interpreter { get; }
@@ -95,10 +95,11 @@ namespace GardenDefenseSystem.Droid
 
             var outputDict = new Dictionary<Java.Lang.Integer, Java.Lang.Object>();
 
-            // new float [][]
-            _OutputBoxes = CreateJaggedArray(numDetections, 4);
-            _OutputClasses = new float[numDetections];
-            _OutputScores = new float[numDetections];
+            int batchSize = 1;
+            // new float [][][]
+            _OutputBoxes = CreateJaggedArray(batchSize, numDetections, 4);
+            _OutputClasses = CreateJaggedArray(batchSize, numDetections);
+            _OutputScores = CreateJaggedArray(batchSize, numDetections);
 
             var mOutputBoxes = OutputBoxes;
             var mOutputClasses = OutputClasses;
@@ -147,8 +148,6 @@ namespace GardenDefenseSystem.Droid
 
             return mappedByteBuffer;
         }
-
-        
 
         //Resize the image for the TensorFlow interpreter
         private ByteBuffer GetPhotoAsByteBuffer(byte[] image, int width, int height)
