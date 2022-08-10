@@ -1,0 +1,83 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage
+    x:Class="GardenDefenseSystem.Views.DetectionPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:vm="clr-namespace:GardenDefenseSystem.ViewModels"
+    Title="{Binding Title}">
+
+    <ContentPage.BindingContext>
+        <vm:DetectionViewModel />
+    </ContentPage.BindingContext>
+
+    <ContentPage.Resources>
+        <ResourceDictionary>
+            <Color x:Key="Accent">#96d1ff</Color>
+        </ResourceDictionary>
+    </ContentPage.Resources>
+
+    <Grid BackgroundColor="Black">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ScrollView Grid.Row="1">
+            <StackLayout
+                Padding="30,24,30,24"
+                Orientation="Vertical"
+                Spacing="10">
+
+
+                <Button
+                    Margin="0,10,0,0"
+                    BackgroundColor="#17e9e1"
+                    Command="{Binding TakePhotoCommand}"
+                    CornerRadius="40"
+                    Text="Take Photo"
+                    TextColor="#242424" />
+                <Button
+                    Margin="0,10,0,0"
+                    BackgroundColor="{Binding AlertButtonColor}"
+                    Command="{Binding StopPlayerCommand}"
+                    Text="Stop Alert Sound"
+                    TextColor="#242424" />
+
+                <Label
+                    FontSize="Caption"
+                    Text="{Binding PredictionStatusMessage}"
+                    TextColor="LightGray" />
+                <Label
+                    FontSize="Caption"
+                    Text="{Binding RemainingHoursOfApiusage}"
+                    TextColor="LightGray" />
+                <StackLayout HorizontalOptions="Center" Orientation="Horizontal">
+                    <Label
+                        FontSize="Caption"
+                        Text="Testing Mode"
+                        TextColor="#262626" />
+                    <Switch
+                        IsToggled="{Binding TestModeSwitchToggleStatus}"
+                        OnColor="SkyBlue"
+                        ThumbColor="#121212" />
+
+                </StackLayout>
+                <Label
+                    FontSize="Default"
+                    Text="Threshold"
+                    TextColor="LightGray" />
+                <Slider
+                    Maximum="90"
+                    Minimum="40"
+                    Value="{Binding ThresholdValue, Mode=TwoWay}" />
+                <Label
+                    FontSize="Caption"
+                    Text="{Binding ThresholdValue}"
+                    TextColor="LightGray" />
+                <Image Source="{Binding LatestCapture.Source}" />
+
+            </StackLayout>
+        </ScrollView>
+    </Grid>
+
+</ContentPage>

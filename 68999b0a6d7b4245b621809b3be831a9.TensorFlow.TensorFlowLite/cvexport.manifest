@@ -1,0 +1,13 @@
+{
+  "DomainType": "ObjectDetection",
+  "Platform": "TensorFlow",
+  "Flavor": "TensorFlowLite",
+  "ExporterVersion": "2.0",
+  "ExportedDate": "2022-06-30T15:48:11.9688238Z",
+  "IterationId": "68999b0a-6d7b-4245-b621-809b3be831a9",
+  "ModelFileName": "model.tflite",
+  "LabelFileName": "labels.txt",
+  "MetadataPropsFileName": "metadata_properties.json",
+  "ModelFileSHA1": "074f3d3dda88f7dde15d35edbfb28558b33cbed6",
+  "SchemaVersion": "1.0"
+}
