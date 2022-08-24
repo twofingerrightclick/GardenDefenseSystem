@@ -20,10 +20,10 @@ namespace GardenDefenseSystem.Droid
         //FloatSize is a constant with the value of 4 because a float value is 4 bytes
         const int FloatSize = 4;
 
-        //PixelSize is a constant with the value of 3 because a pixel has three color channels: Red Green and Blue
-        const int PixelSize = 3;
+        //PixelSize is a constant with the value of Floatsize * 3 because a pixel has three color channels: Red Green and Blue
+        const int PixelSize = FloatSize*3;
 
-        // _OutputBoxes: array of shape [Batchsize, NUM_DETECTIONS,4]
+        // _OutputBoxes: array of shape [NUM_DETECTIONS,4]
         // contains the location of detected boxes
         private float[][] _OutputBoxes;
         public Java.Lang.Object OutputBoxes
@@ -34,6 +34,7 @@ namespace GardenDefenseSystem.Droid
 
         // _OutputClasses: array of shape [NUM_DETECTIONS]
         // contains the classes of detected boxes
+        // long because underlying type on Java side is INT64
         private long[] _OutputClasses;
         public Java.Lang.Object OutputClasses
         {
@@ -67,7 +68,7 @@ namespace GardenDefenseSystem.Droid
             var width = shape[1];
             var height = shape[2];
 
-            var imageByteBuffer = GetPhotoAsByteBuffer(image, width, height);
+            using var imageByteBuffer = GetPhotoAsByteBuffer(image, width, height);
 
             //use StreamReader to import the labels from labels.txt
             using var streamReader = new StreamReader(
@@ -90,7 +91,7 @@ namespace GardenDefenseSystem.Droid
             int numDetections = Interpreter
                 .GetOutputTensor(detectedClassesOutputIndex)
                 .NumElements();
- 
+
             _OutputBoxes = CreateJaggedArray<float>(numDetections, 4);
             _OutputClasses = new long[numDetections];
             _OutputScores = new float[numDetections];
@@ -108,7 +109,6 @@ namespace GardenDefenseSystem.Droid
             outputMap.Add(new Java.Lang.Integer(detectedBoxesOutputIndex), javaizedOutputBoxes);
             outputMap.Add(new Java.Lang.Integer(detectedClassesOutputIndex), javaizedOutputClasses);
             outputMap.Add(new Java.Lang.Integer(detectedScoresOutputIndex), javaizedOutputScores);
-   
 
             Interpreter.RunForMultipleInputsOutputs(inputArray, outputMap);
 
@@ -133,7 +133,7 @@ namespace GardenDefenseSystem.Droid
         {
             var assetDescriptor = Android.App.Application.Context.Assets.OpenFd("model.tflite");
 
-            var inputStream = new FileInputStream(assetDescriptor.FileDescriptor);
+            using var inputStream = new FileInputStream(assetDescriptor.FileDescriptor);
 
             var mappedByteBuffer = inputStream.Channel.Map(
                 FileChannel.MapMode.ReadOnly,
@@ -150,7 +150,7 @@ namespace GardenDefenseSystem.Droid
             var bitmap = BitmapFactory.DecodeByteArray(image, 0, image.Length);
             var resizedBitmap = Bitmap.CreateScaledBitmap(bitmap, width, height, true);
 
-            var modelInputSize = FloatSize * height * width * PixelSize;
+            var modelInputSize = height * width * PixelSize;
             var byteBuffer = ByteBuffer.AllocateDirect(modelInputSize);
             byteBuffer.Order(ByteOrder.NativeOrder());
 
@@ -183,17 +183,6 @@ namespace GardenDefenseSystem.Droid
             bitmap.Recycle();
 
             return byteBuffer;
-        }
-
-        private static T[][][] CreateJaggedArray<T>(int lay1, int lay2, int lay3)
-        {
-            var arr = new T[lay1][][];
-
-            for (int i = 0; i < lay1; i++)
-            {
-                arr[i] = CreateJaggedArray<T>(lay2, lay3);
-            }
-            return arr;
         }
 
         private static T[][] CreateJaggedArray<T>(int lay1, int lay2)

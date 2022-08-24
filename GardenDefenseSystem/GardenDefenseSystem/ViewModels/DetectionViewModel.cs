@@ -419,7 +419,7 @@ namespace GardenDefenseSystem.ViewModels
 
         // times based on Spokane (in hours)
         public static int[] Sunsets { get; set; } =
-            new int[] { 16, 17, 18, 20, 21, 21, 21, 20, 19, 17, 16, 16 };
+            new int[] { 17, 17, 19, 21, 22, 22, 21, 21, 20, 19, 18, 18 };
 
         public static int[] Sunrises { get; set; } =
             new int[] { 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7 };
