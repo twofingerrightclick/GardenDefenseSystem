@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<configuration>
+	<appSettings>
+		<add key="UseCustomVisionApi" value="false" />
+		<add key="VisionApiBaseAddress" value="https://customvisiongardendefensesystem-prediction.cognitiveservices.azure.com" />
+		<add key="PredictionKey" value="c022e694933f4909b40c41d567c05797" />
+		<add key="VisionProjectName" value="be5376e6-601d-42bb-b1d3-c5561880918d" />
+		<add key="VisionModelName" value="main" />
+	</appSettings>
+</configuration>
